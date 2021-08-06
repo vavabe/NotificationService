@@ -9,16 +9,27 @@ using Microsoft.Extensions.Hosting;
 using Notification.Extensions;
 using Notification.Filters;
 using System.Reflection;
+using StackExchange.Redis;
+using Microsoft.Extensions.Configuration;
 
 namespace Notification
 {
     public class Startup
     {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public Startup(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
+        private IConfiguration configuration { get; set; }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMediatR(Assembly.GetExecutingAssembly());
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("NotificationRedis");
+            });
             services.AddControllers(options =>
             {
                 options.Filters.Add(typeof(ExceptionFilter));
@@ -36,10 +47,9 @@ namespace Notification
             }
 
             app.UseSwagger(); 
-
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Notification API V1");
             });
 
             app.UseRequestLogger();

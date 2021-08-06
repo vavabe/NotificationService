@@ -7,7 +7,7 @@ namespace Notification.Middlewares
     public class RequestLoggerMiddleware
     {
         private readonly RequestDelegate _next;
-        private ILogger _logger;
+        private readonly ILogger _logger;
         public RequestLoggerMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
         {
             _next = next;

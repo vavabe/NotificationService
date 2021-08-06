@@ -11,7 +11,7 @@ namespace Notification.Filters
 {
     public class ExceptionFilter : IExceptionFilter
     {
-        private ILogger _logger;
+        private readonly ILogger _logger;
 
         public ExceptionFilter(ILoggerFactory factory)
         {

@@ -14,15 +14,15 @@ namespace Notification.Controllers
         [HttpGet]
         public string Get()
         {
-            return "azaza";
+            return "Hello, world";
         }
 
         [HttpGet]
         [Route("error")]
         public string GetError()
         {
-            throw new Exception("azaza");
-            return "azaza";
+            throw new Exception("Exception");
+            return "Hello, world";
         }
     }
 }
