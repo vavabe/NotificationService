@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "composeLaunchServiceName": "notification",
+      "serviceActions": {
+        "notification": "StartDebugging",
+        "pgadmin": "StartWithoutDebugging",
+        "postgres": "StartWithoutDebugging",
+        "redis": "StartWithoutDebugging"
+      },
+      "composeLaunchAction": "LaunchBrowser",
+      "commandVersion": "1.0",
+      "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}/swagger"
+    }
+  }
+}

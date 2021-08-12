@@ -1,16 +1,21 @@
+using HealthChecks.UI.Client;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Notification.Extensions;
 using Notification.Filters;
+using Notification.Models.Context;
+using Notification.Services.Contracts;
+using Notification.Services.Implementation;
+using Notification.Services.Options;
 using System.Reflection;
-using StackExchange.Redis;
-using Microsoft.Extensions.Configuration;
 
 namespace Notification
 {
@@ -28,13 +33,21 @@ namespace Notification
             services.AddMediatR(Assembly.GetExecutingAssembly());
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = configuration.GetConnectionString("NotificationRedis");
+                options.Configuration = configuration.GetConnectionString(nameof(RedisCacheService));
             });
+            services.AddEntityFrameworkNpgsql().AddDbContext<PostgresNotificationDataContext>(opt =>
+                opt.UseNpgsql(configuration.GetConnectionString(nameof(PostgresNotificationDataContext))));
             services.AddControllers(options =>
             {
                 options.Filters.Add(typeof(ExceptionFilter));
             });
-            services.AddHealthChecks();
+
+            services.Configure<RedisOptions>(configuration);
+
+            services.AddTransient<ICacheService, RedisCacheService>();
+            services.AddHealthChecks()
+                .AddRedis(configuration.GetConnectionString(nameof(RedisCacheService)))
+                .AddNpgSql(configuration.GetConnectionString(nameof(PostgresNotificationDataContext)));
             services.AddSwaggerGen();
         }
 
@@ -46,7 +59,7 @@ namespace Notification
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseSwagger(); 
+            app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Notification API V1");
@@ -57,15 +70,6 @@ namespace Notification
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/health", new HealthCheckOptions()
-                {
-                    ResultStatusCodes =
-                    {
-                        [HealthStatus.Healthy] = StatusCodes.Status200OK,
-                        [HealthStatus.Degraded] = StatusCodes.Status200OK,
-                        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
-                    }
-                });
                 endpoints.MapControllers();
             });
         }

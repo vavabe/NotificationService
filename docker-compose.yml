@@ -1,16 +1,31 @@
 version: '3.4'
 
+networks:
+  notification-dev:
+    driver: bridge
+
 services:
-  db:
+  notification: 
+    image: ${DOCKER_REGISTRY-}notification
+    build:
+      context: .
+      dockerfile: Notification/Dockerfile
+    links:
+        - "redis"
+    networks:
+        - notification-dev
+  postgres:
     container_name: pg_container
-    image: postgres
+    image: postgres:latest
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: test_db
+        POSTGRES_DB: notification
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
     ports:
       - "5432:5432"
+    networks:
+        - notification-dev
   pgadmin:
     container_name: pgadmin4_container
     image: dpage/pgadmin4
@@ -20,12 +35,10 @@ services:
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "5050:80"
-
+    networks:
+        - notification-dev
   redis:
     container_name: redis_container
-    image: redis
-  notification: 
-    image: ${DOCKER_REGISTRY-}notification
-    build:
-      context: .
-      dockerfile: Notification/Dockerfile
+    image: redis:latest
+    networks:
+        - notification-dev
