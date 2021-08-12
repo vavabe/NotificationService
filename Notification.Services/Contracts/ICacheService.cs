@@ -1,8 +1,10 @@
-﻿namespace Notification.Services.Contracts
+﻿using System.Threading.Tasks;
+
+namespace Notification.Services.Contracts
 {
     public interface ICacheService
     {
-        T Add<T>(string key, T value);
-        T Get<T>(string key);
+        Task<T> Add<T>(string key, T value);
+        Task<T> Get<T>(string key);
     }
 }

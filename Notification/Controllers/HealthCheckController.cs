@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Notification.Controllers
 {
-    [Route("api/v1/health")]
+    [Route("/health")]
     [ApiController]
     public class HealthCheckController : ControllerBase
     {

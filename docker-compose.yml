@@ -1,5 +1,9 @@
 version: '3.4'
 
+volumes:
+  postgres_data:
+      driver: local
+
 networks:
   notification-dev:
     driver: bridge
@@ -12,18 +16,23 @@ services:
       dockerfile: Notification/Dockerfile
     links:
         - "redis"
+    ports:
+        - 8000:80
+        - 8001:443
     networks:
         - notification-dev
   postgres:
     container_name: pg_container
     image: postgres:latest
     restart: always
+    volumes:
+        - postgres_data:/var/lib/postgresql/data
     environment:
         POSTGRES_DB: notification
         POSTGRES_USER: admin
         POSTGRES_PASSWORD: admin
     ports:
-      - "5432:5432"
+        - "5432:5432"
     networks:
         - notification-dev
   pgadmin:
@@ -34,7 +43,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: root
     ports:
-      - "5050:80"
+        - "5050:80"
     networks:
         - notification-dev
   redis:

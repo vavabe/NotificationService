@@ -5,6 +5,7 @@ using Notification.Services.Contracts;
 using Notification.Services.Options;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Notification.Services.Implementation
 {
@@ -28,16 +29,16 @@ namespace Notification.Services.Implementation
             };
         }
 
-        public T Add<T>(string key, T value)
+        public async Task<T> Add<T>(string key, T value)
         {
-            _cache.SetString(key, JsonConvert.SerializeObject(value), cacheOptions);
+            await _cache.SetStringAsync(key, JsonConvert.SerializeObject(value), cacheOptions);
 
             return value;
         }
 
-        public T Get<T>(string key)
+        public async Task<T> Get<T>(string key)
         {
-            var value = _cache.GetString(key);
+            var value = await _cache.GetStringAsync(key);
 
             if (value != null)
             {

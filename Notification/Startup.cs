@@ -1,5 +1,6 @@
 using HealthChecks.UI.Client;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Notification.Extensions;
 using Notification.Filters;
 using Notification.Models.Context;
@@ -16,6 +18,7 @@ using Notification.Services.Contracts;
 using Notification.Services.Implementation;
 using Notification.Services.Options;
 using System.Reflection;
+using Microsoft.OpenApi.Models;
 
 namespace Notification
 {
@@ -43,12 +46,37 @@ namespace Notification
             });
 
             services.Configure<RedisOptions>(configuration);
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+            {
+                options.Authority = configuration["Oidc:Authority"];
+                options.Audience = configuration["Oidc:ClientId"];
+                options.IncludeErrorDetails = true;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = false,
+                    //ValidAudiences = new[] { "master-realm", "account" },
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["Oidc:Authority"],
+                    ValidateLifetime = false
+                };
+            });
 
+            services.AddAuthorization();
             services.AddTransient<ICacheService, RedisCacheService>();
             services.AddHealthChecks()
                 .AddRedis(configuration.GetConnectionString(nameof(RedisCacheService)))
-                .AddNpgSql(configuration.GetConnectionString(nameof(PostgresNotificationDataContext)));
-            services.AddSwaggerGen();
+                .AddNpgSql(configuration.GetConnectionString(nameof(PostgresNotificationDataContext))); 
+            services.AddSwaggerGen(c =>
+                {
+                    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                    {
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Name = "Authorization",
+                        In = ParameterLocation.Header,
+                        Type = SecuritySchemeType.ApiKey
+                    });
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,16 +86,15 @@ namespace Notification
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseRequestLogger();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Notification API V1");
             });
-
-            app.UseRequestLogger();
-
             app.UseRouting();
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
