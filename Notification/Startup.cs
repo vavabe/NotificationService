@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Notification.Extensions;
 using Notification.Filters;
 using System.Reflection;
-using StackExchange.Redis;
-using Microsoft.Extensions.Configuration;
 
 namespace Notification
 {
@@ -46,7 +45,7 @@ namespace Notification
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseSwagger(); 
+            app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Notification API V1");
